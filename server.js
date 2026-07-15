@@ -95,4 +95,34 @@ app.post('/api/content', async (req, res) => {
   }
 
   try {
-    await fsp.writeFile(DATA_FILE,
+    await fsp.writeFile(DATA_FILE, JSON.stringify(incoming, null, 2), 'utf-8');
+    console.log(`[server] data.json diperbarui (${new Date().toLocaleTimeString('id-ID')})`);
+    res.status(200).json({ message: 'Perubahan berhasil disimpan ke data.json.', data: incoming });
+  } catch (err) {
+    console.error('[server] Gagal menulis data.json:', err.message);
+    res.status(500).json({ message: 'Gagal menyimpan ke data.json di server.' });
+  }
+});
+
+/* ── 404 khusus untuk path /api/* yang tidak dikenali ── */
+app.use('/api', (req, res) => {
+  res.status(404).json({ message: `Endpoint ${req.method} ${req.originalUrl} tidak ditemukan.` });
+});
+
+app.listen(PORT, () => {
+  const isHosted = !!process.env.RENDER; // Render otomatis mengisi env var ini
+  console.log('─────────────────────────────────────────────────');
+  console.log(`  ProTAS 3D server berjalan (port ${PORT})`);
+  if (!isHosted) {
+    console.log(`  Landing page : http://localhost:${PORT}/index.html`);
+    console.log(`  Admin panel  : http://localhost:${PORT}/admin.html`);
+  }
+  console.log(`  Data konten  : ${DATA_FILE}`);
+  if (isHosted) {
+    console.log('  ⚠  Terdeteksi berjalan di Render free tier: filesystem-nya');
+    console.log('     ephemeral — data.json bisa reset saat service redeploy/restart/');
+    console.log('     spin-down (tidak ada trafik 15 menit). Unduh backup berkala lewat');
+    console.log('     tombol "💾 Backup" di admin.html. Detail: README.txt.');
+  }
+  console.log('─────────────────────────────────────────────────');
+});

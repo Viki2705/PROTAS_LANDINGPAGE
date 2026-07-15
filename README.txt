@@ -1,903 +1,178 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Editor — ProTAS</title>
-  <meta name="robots" content="noindex,nofollow" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/admin.css" />
-</head>
-<body>
-  <main class="admin-shell" id="adminShell" hidden>
-    <header class="admin-topbar">
-      <div class="admin-brand">
-        <div class="admin-brand-icon">PT</div>
-        <div>
-          <strong>ProTAS Admin Editor</strong>
-          <span>Edit landing page secara visual</span>
-        </div>
-      </div>
-      <div class="admin-actions">
-        <button class="admin-btn admin-btn-soft" id="previewDesktop" type="button">Desktop</button>
-        <button class="admin-btn admin-btn-soft" id="previewTablet" type="button">Tablet</button>
-        <button class="admin-btn admin-btn-soft" id="previewMobile" type="button">Mobile</button>
-        <button class="admin-btn admin-btn-soft" id="openLeads" type="button">📋 Prospek<span class="leads-badge" id="leadsBadge">0</span></button>
-        <button class="admin-btn admin-btn-soft" id="openBackup" type="button">💾 Backup</button>
-        <button class="admin-btn admin-btn-primary" id="saveState" type="button">Simpan</button>
-        <button class="admin-btn admin-btn-danger" id="resetState" type="button">Reset</button>
-        <button class="admin-btn admin-btn-soft" id="logoutBtn" type="button">Keluar</button>
-      </div>
-    </header>
+ProTAS 3D — Landing Page + Admin Editor + Backend (Express + JSON file)
+
+Cara menjalankan (dengan server/backend — direkomendasikan):
+1. Ekstrak ZIP, buka folder ProTAS_3D lewat terminal.
+2. Jalankan:  npm install
+3. Jalankan:  node server.js   (atau: npm start)
+4. Terminal akan menampilkan "ProTAS 3D server berjalan di http://localhost:3000"
+5. Buka http://localhost:3000/index.html di browser.
+6. Klik tombol Masuk di pojok kanan atas, atau buka http://localhost:3000/admin.html langsung.
+7. Login admin:
+   Username: viki123
+   Password: amikom123
+8. Klik section landing page pada preview untuk membuka panel editor.
+9. Ubah teks, judul, deskripsi, tombol, warna, dan gambar. Perubahan langsung terlihat di preview
+   DAN otomatis terkirim (POST) ke server untuk ditulis ke data.json.
+10. Klik Simpan untuk konfirmasi eksplisit bahwa data sudah tersimpan ke data.json di server.
+11. Buka index.html di perangkat/browser lain (masih lewat http://localhost:3000) — konten
+    hasil edit admin akan ikut tampil, karena sumber datanya sekarang di server, bukan cuma
+    localStorage satu browser saja.
+
+Cara menjalankan (tanpa server — mode cadangan/lama):
+Kalau server.js tidak dijalankan, index.html & admin.html tetap bisa dibuka langsung (double click
+atau lewat "python -m http.server") dan tetap berfungsi seperti sebelumnya — perubahan admin
+otomatis jatuh kembali (fallback) ke localStorage per-browser saja, karena setiap fetch() ke
+server akan gagal dengan tenang (lihat console browser: "server belum jalan").
+
+Catatan penting:
+- Backend server.js dibuat pakai Express.js + modul fs (BUKAN database seperti MySQL), sesuai
+  instruksi dosen: penyimpanan dilakukan dengan cara menulis-ulang (rewrite) file data.json.
+- Gambar bisa diganti melalui path file di folder assets/images atau upload langsung dari panel editor
+  (data gambar ter-encode base64 dan ikut tersimpan sebagai bagian dari data.json).
+- Data prospek dari Formulir Kontak (lihat bagian "Fitur Prospek" di bawah) MASIH memakai
+  localStorage, belum dipindah ke backend — lihat catatan di bagian itu.
+
+──────────────────────────────────────────
+UPDATE — Pelengkap 10 Anatomi Landing Page
+──────────────────────────────────────────
+3 section berikut ditambahkan agar landing page memenuhi ke-10 unsur
+anatomi (headline, sub-headline, hero, UVP, manfaat, fitur, social proof,
+CTA, garansi, formulir kontak):
+
+4. UVP  → section id="kenapa-protas" (setelah Trusted Logos, sebelum Fitur)
+          Perbandingan "Cara Lama" vs "Dengan ProTAS" untuk menegaskan
+          alasan kompetitif memilih ProTAS.
+9. Garansi → section id="garansi" (setelah FAQ, sebelum CTA)
+          4 poin risk-reducer: keamanan data, uang kembali 30 hari
+          (paket Premium/Institusi), gratis tanpa kartu kredit, dan
+          dukungan responsif.
+10. Formulir Kontak → section id="kontak" (setelah CTA, sebelum Footer)
+          Form Nama, Email, Peran, dan Pesan untuk menjaring prospek
+          (mahasiswa/dosen/institusi).
+
+Semua section baru ini otomatis bisa diklik & diedit dari admin.html —
+teks, judul, deskripsi, label, dan tombolnya mengikuti sistem CMS yang
+sama seperti section lain (klik section → edit teks/tombol/warna → Simpan).
+
+Fitur "📋 Prospek" (admin.html, topbar):
+- Setiap kali formulir Kontak di landing page diisi & dikirim, datanya
+  otomatis tersimpan (localStorage, key: protas_cms_leads_v1) dan bisa
+  dilihat admin lewat tombol "📋 Prospek" di pojok kanan atas admin.html.
+- Di situ admin bisa melihat daftar prospek (nama, email, peran, pesan,
+  waktu), menghapus satu per satu atau semua, dan mengunduh sebagai CSV.
+- Data prospek ini BELUM dipindah ke server.js/data.json (backend baru di bawah
+  ini khusus untuk konten landing page, sesuai permintaan). Kalau mau
+  prospek juga ikut tersimpan di server dengan pola yang sama, tinggal minta —
+  polanya sama persis seperti /api/content, tinggal tambah /api/leads.
+- Untuk notifikasi email otomatis ke tim, sambungkan fungsi addLead() di
+  js/cms.js ke layanan seperti Formspree, EmailJS, atau backend/API sendiri.
+
+──────────────────────────────────────────
+UPDATE — Backend Sederhana (Express + data.json)
+──────────────────────────────────────────
+Sebelumnya seluruh perubahan admin (teks/warna/gambar) HANYA tersimpan di
+localStorage — artinya cuma tersimpan di satu browser, tidak tersinkron ke
+perangkat/browser lain. Update ini menambahkan backend sederhana yang
+menyimpan perubahan itu ke file data.json di server, menggantikan peran
+database sesuai instruksi dosen (belum boleh pakai MySQL dkk).
+
+Cara kerja singkat:
+  1. server.js (Express + fs) menyediakan 2 endpoint:
+       GET  /api/content   -> baca isi data.json, kembalikan sebagai JSON
+       POST /api/content   -> terima JSON dari body request, tulis-ulang
+                               (fs.writeFile) ke data.json
+  2. js/cms.js jadi "jembatan" ke server ini:
+       - setState(...)              -> simpan ke localStorage (instan) +
+                                        POST ke server (async, di background)
+       - syncContentFromServer()    -> GET dari server, lalu terapkan ke
+                                        halaman (dipanggil dari main.js &
+                                        admin.js saat halaman dibuka)
+  3. js/main.js  (index.html) memanggil syncContentFromServer() di baris
+     paling atas, supaya pengunjung selalu melihat versi konten terbaru
+     dari data.json, bukan cuma localStorage browser mereka sendiri.
+  4. js/admin.js memanggil syncContentFromServer() sebelum preview pertama
+     dibangun (supaya panel editor mulai dari data terbaru), dan tombol
+     "Simpan" memanggil cms.pushContentToServer() secara eksplisit dengan
+     notifikasi sukses/gagal yang terlihat jelas di layar.
+
+Kenapa localStorage tetap dipakai (bukan dihapus total)?
+  Supaya panel admin tetap terasa instan (baca/tulis data secara synchronous,
+  tanpa nunggu jaringan setiap kali mengetik satu huruf), dan supaya situs
+  tetap berfungsi walau server.js kebetulan sedang tidak menyala (fallback
+  otomatis, lihat "Cara menjalankan (tanpa server)" di atas). data.json di
+  server tetap jadi sumber data yang sesungguhnya/permanen.
+
+File baru yang ditambahkan:
+  server.js        - server Express + endpoint GET/POST /api/content
+  package.json     - daftar dependency (express) + script "npm start"
+  package-lock.json- versi persis dependency (auto-generate oleh npm install)
+  data.json        - dibuat OTOMATIS oleh server.js saat pertama kali
+                      dijalankan (tidak perlu dibuat manual, dan sengaja
+                      tidak ikut dikirim di ZIP ini supaya selalu mulai
+                      dari keadaan bersih)
+  .gitignore       - supaya node_modules/ & data.json tidak ikut ke-commit
+                      kalau proyek ini dimasukkan ke Git
+  render.yaml      - konfigurasi deploy otomatis untuk Render (opsional,
+                      lihat bagian "Deploy ke Hosting Sungguhan" di bawah)
+
+──────────────────────────────────────────
+UPDATE — Deploy ke Hosting Sungguhan (Render)
+──────────────────────────────────────────
+Kenapa tidak bisa di Netlify / Vercel / GitHub Pages?
+  Ketiganya adalah static/serverless hosting, bukan tempat menjalankan proses
+  Node.js yang terus menyala seperti server.js. GitHub Pages sama sekali tidak
+  menjalankan Node.js. Netlify & Vercel BISA menjalankan kode server, tapi
+  hanya dalam bentuk serverless function yang filesystem-nya read-only —
+  fs.writeFile() ke data.json akan gagal (error EROFS). Solusi resmi kedua
+  platform itu pun bukan file lokal, tapi produk object-storage terpisah
+  (Vercel Blob / Netlify Blobs) — di luar cakupan tugas "simpan ke file .json".
+
+Cara deploy ke Render (mendukung Node.js beneran):
+  1. Push folder proyek ini (semuanya, KECUALI node_modules & data.json —
+     sudah diatur otomatis lewat .gitignore) ke repo GitHub.
+  2. Ke https://render.com -> New -> Web Service -> connect repo GitHub tadi.
+  3. Isi konfigurasi (atau biarkan Render membaca render.yaml otomatis kalau
+     pilih "New -> Blueprint" alih-alih "New -> Web Service"):
+       Build Command : npm install
+       Start Command : node server.js
+       Plan          : Free
+  4. Klik Deploy. Setelah selesai, Render kasih URL seperti
+     https://protas-3d.onrender.com — landing page & admin ada di situ, di
+     path yang sama (/index.html, /admin.html), karena server.js men-serve
+     keduanya sekaligus lewat satu proses yang sama (tidak perlu setting
+     CORS/origin terpisah).
+  5. Arahkan domain yang sudah kamu beli: di dashboard Render, buka service
+     ini -> Settings -> Custom Domains -> tambahkan domainmu -> ikuti
+     instruksi Render untuk menambahkan record CNAME/A di pengaturan DNS
+     domainmu (menunya beda-beda tergantung tempat beli domain, tapi
+     pola/istilahnya sama: "Custom Domain" atau "DNS Management").
+
+⚠ PENTING — Batasan tingkat gratis Render (dikonfirmasi dari dokumentasi resmi):
+  Free web service di Render punya filesystem EPHEMERAL — semua perubahan file
+  lokal (termasuk data.json) HILANG setiap kali service redeploy, restart,
+  ATAU spin-down. Service gratis otomatis spin-down setelah 15 menit tanpa
+  trafik sama sekali. Jadi kalau situsmu sepi pengunjung, data.json bisa balik
+  ke kosong/default begitu ada yang buka lagi. Ini BUKAN bug dari kode kita —
+  penyimpanan file yang benar-benar permanen di Render adalah fitur berbayar
+  (persistent disk).
+
+  Mitigasi yang sudah disiapkan di proyek ini (masih dalam batas gratis, tanpa
+  bayar apa pun):
+    - Tombol "💾 Backup" di admin.html -> "Unduh Backup" untuk menyimpan
+      data.json ke komputermu kapan saja (terutama sebelum demo ke dosen),
+      dan "Pulihkan dari File" untuk mengembalikannya kalau ternyata sempat
+      ter-reset. Simpan file backup-nya baik-baik!
+    - (Opsional) Supaya service jarang sekali spin-down, daftarkan URL
+      Render-mu ke layanan monitoring gratis seperti UptimeRobot atau
+      cron-job.org, atur supaya di-ping setiap 5-10 menit. Ini MENGURANGI
+      risiko reset akibat idle, tapi tidak menjamin 100% (Render tetap bisa
+      me-restart service kapan saja untuk keperluan maintenance mereka).
+    - Kalau nanti butuh persistensi yang benar-benar terjamin (misalnya pas
+      sidang/demo penting), Render punya add-on "Persistent Disk" berbayar
+      (harga per GB, cek render.com/docs/disks) yang tinggal dipasang tanpa
+      ubah kode sama sekali — data.json otomatis ikut aman lintas restart.
+
+Cara menjalankan (tanpa server) di bagian atas README ini tetap berlaku persis
+sama di Render: kalau karena suatu hal fetch() ke /api/content gagal, situs
+tetap jalan pakai localStorage sebagai fallback.
 
-    <section class="admin-workspace">
-      <aside class="admin-sidebar">
-        <div class="panel-card">
-          <h2>Pengaturan Global</h2>
-          <p>Ubah warna utama dan tampilan dasar website.</p>
-          <div class="form-grid compact">
-            <label>Warna utama
-              <input type="color" data-css-var="--primary" value="#5A5EF0">
-            </label>
-            <label>Warna highlight
-              <input type="color" data-css-var="--primary-light" value="#5A5EF0">
-            </label>
-            <label>Background utama
-              <input type="color" data-css-var="--dark" value="#06071A">
-            </label>
-            <label>Teks utama
-              <input type="color" data-css-var="--text" value="#FFFFFF">
-            </label>
-          </div>
-        </div>
-
-        <div class="panel-card help-card">
-          <h2>Cara pakai</h2>
-          <ol>
-            <li>Klik section pada preview.</li>
-            <li>Ubah teks, gambar, tombol, atau warna di panel kanan.</li>
-            <li>Perubahan langsung tampil pada preview.</li>
-            <li>Klik Simpan agar muncul juga di landing page utama.</li>
-          </ol>
-        </div>
-
-        <div class="panel-card section-list-card">
-          <h2>Daftar Section</h2>
-          <p>Pilih dari daftar ini jika klik langsung pada preview tidak nyaman.</p>
-          <div class="section-list" id="sectionList"></div>
-        </div>
-      </aside>
-
-      <div class="preview-wrap" id="previewWrap">
-        <div class="preview-toolbar">
-          <span id="currentSectionLabel">Pilih section pada preview</span>
-          <a href="index.html" target="_blank" rel="noopener">Buka landing page</a>
-        </div>
-        <iframe id="landingPreview" title="Preview Landing Page ProTAS" src="about:blank"></iframe>
-      </div>
-
-      <aside class="editor-panel" id="editorPanel">
-        <div class="empty-editor" id="emptyEditor">
-          <div class="empty-icon">✦</div>
-          <h2>Belum ada section dipilih</h2>
-          <p>Klik navbar, hero, fitur, testimoni, FAQ, CTA, atau footer pada preview untuk membuka pengaturan section.</p>
-        </div>
-        <div id="editorContent" hidden></div>
-      </aside>
-    </section>
-  </main>
-
-  <section class="admin-login-screen" id="adminLoginScreen">
-    <form class="admin-login-card" id="adminLoginForm">
-      <div class="admin-brand-icon large">PT</div>
-      <p class="login-eyebrow">Admin Panel</p>
-      <h1>Masuk ke Editor ProTAS</h1>
-      <p>Masukkan akun admin untuk membuka halaman pengelolaan landing page.</p>
-      <label>Username
-        <input id="loginUsername" type="text" autocomplete="username" placeholder="Username admin" required>
-      </label>
-      <label>Password
-        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password admin" required>
-      </label>
-      <p class="login-error" id="loginError"></p>
-      <button class="admin-btn admin-btn-primary full" type="submit">Masuk</button>
-      <a class="back-link" href="index.html">← Kembali ke landing page</a>
-    </form>
-  </section>
-
-  <div class="admin-toast" id="adminToast" role="status" aria-live="polite"></div>
-
-  <div class="leads-modal-backdrop" id="backupModalBackdrop" aria-hidden="true">
-    <div class="leads-modal" style="width:min(560px,100%)" role="dialog" aria-modal="true" aria-labelledby="backupModalTitle">
-      <button class="leads-modal-close" id="backupModalClose" type="button" aria-label="Tutup">×</button>
-      <p class="login-eyebrow" style="margin-bottom:4px">Data Konten</p>
-      <h2 id="backupModalTitle">Backup &amp; Pulihkan</h2>
-      <p class="leads-modal-desc">Hosting gratis bisa mereset <code>data.json</code> saat service sedang tidak ada trafik. Unduh cadangan secara berkala — terutama sebelum demo ke dosen — supaya bisa dipulihkan kalau kontenmu tiba-tiba kembali ke tampilan default.</p>
-      <div class="leads-modal-actions">
-        <button class="admin-btn admin-btn-soft" id="downloadBackupBtn" type="button">⬇ Unduh Backup</button>
-        <label class="admin-btn admin-btn-soft backup-restore-label" id="restoreBackupLabel" for="restoreBackupInput">⬆ Pulihkan dari File</label>
-        <input type="file" id="restoreBackupInput" accept="application/json" hidden>
-      </div>
-      <p class="backup-status" id="backupStatus" aria-live="polite"></p>
-    </div>
-  </div>
-
-  <div class="leads-modal-backdrop" id="leadsModalBackdrop" aria-hidden="true">
-    <div class="leads-modal" role="dialog" aria-modal="true" aria-labelledby="leadsModalTitle">
-      <div class="leads-modal-head">
-        <div>
-          <p class="login-eyebrow" style="margin-bottom:4px">Formulir Kontak</p>
-          <h2 id="leadsModalTitle">Prospek Masuk</h2>
-        </div>
-        <button class="leads-modal-close" id="leadsModalClose" type="button" aria-label="Tutup">×</button>
-      </div>
-      <p class="leads-modal-desc">Daftar pengunjung yang mengisi formulir kontak (section "Hubungi Kami") di landing page. Data ini tersimpan secara lokal di browser ini — belum tersambung ke server/database sungguhan.</p>
-      <div class="leads-modal-actions">
-        <button class="admin-btn admin-btn-soft" id="exportLeadsCsv" type="button">⬇ Unduh CSV</button>
-        <button class="admin-btn admin-btn-danger" id="clearLeadsBtn" type="button">Hapus Semua</button>
-      </div>
-      <div class="leads-table-wrap" id="leadsTableWrap"></div>
-    </div>
-  </div>
-
-  <template id="landingTemplate">
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ProTAS — Progres Tugas Akhir Skripsi</title>
-  <meta name="description" content="Platform digital untuk pemantauan progres tugas akhir dan skripsi mahasiswa." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/admin-login.css" />
-</head>
-<body>
-
-<!-- ── MOBILE MENU ── -->
-<div class="mobile-menu" id="mobileMenu">
-  <button class="mobile-close" id="mobileClose">✕</button>
-  <a href="#fitur">Fitur</a>
-  <a href="#cara-kerja">Cara Kerja</a>
-  <a href="#pengguna">Pengguna</a>
-  <a href="#faq">FAQ</a>
-  <a href="#kontak">Kontak</a>
-  <a href="#" class="admin-login-trigger">Masuk Admin</a>
-  <a href="#mulai" class="btn btn-primary" style="font-size:18px;padding:14px 32px;border-radius:14px;margin-top:8px;">Mulai Sekarang</a>
-</div>
-
-<!-- ── NAVBAR ── -->
-<nav class="navbar" id="navbar">
-  <div class="nav-inner">
-    <a href="#" class="nav-logo">
-      <div class="nav-logo-icon">PT</div>
-      <span class="nav-logo-text">Pro<span>TAS</span></span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="#fitur">Fitur</a></li>
-      <li><a href="#cara-kerja">Cara Kerja</a></li>
-      <li><a href="#pengguna">Pengguna</a></li>
-      <li><a href="#progres">Progres</a></li>
-      <li><a href="#faq">FAQ</a></li>
-      <li><a href="#kontak">Kontak</a></li>
-    </ul>
-    <div class="nav-cta">
-      <a href="#" class="btn btn-ghost admin-login-trigger">Masuk</a>
-      <a href="#mulai" class="btn btn-primary">Coba Gratis →</a>
-    </div>
-    <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
-  </div>
-</nav>
-
-<!-- ════════════════════════════════════════════
-     HERO — 3D INTERACTIVE SCENE
-════════════════════════════════════════════ -->
-<section class="hero" id="beranda">
-  <div class="hero-bg-grid"></div>
-  <div class="hero-bg-glow" id="heroGlow"></div>
-  <div class="hero-bg-orb-1"></div>
-  <div class="hero-bg-orb-2"></div>
-
-  <div class="container">
-    <div class="hero-inner">
-
-      <!-- ── LEFT: TEXT CONTENT ── -->
-      <div class="hero-left">
-        <div class="hero-badge">
-          <div class="hero-badge-dot"></div>
-          <span>Platform Bimbingan Akademik #1</span>
-        </div>
-
-        <h1 class="hero-title">
-          <span class="brand-name">ProTAS</span>
-          Progres Tugas<br>Akhir Skripsi
-        </h1>
-
-        <p class="hero-desc">
-          Platform terintegrasi untuk memantau progres skripsi, mengelola jadwal bimbingan, dan berkomunikasi langsung dengan dosen pembimbing — semua dalam satu ekosistem digital yang cerdas.
-        </p>
-
-        <div class="hero-features-mini">
-          <div class="hero-feature-item">
-            <div class="hero-feature-icon">📊</div>
-            <span>Pantau progres per-BAB secara real-time</span>
-          </div>
-          <div class="hero-feature-item">
-            <div class="hero-feature-icon">📅</div>
-            <span>Manajemen jadwal bimbingan otomatis</span>
-          </div>
-          <div class="hero-feature-item">
-            <div class="hero-feature-icon">💬</div>
-            <span>Chat langsung dengan dosen pembimbing</span>
-          </div>
-        </div>
-
-        <div class="hero-actions">
-          <a href="#mulai" class="btn btn-primary btn-primary-lg">🚀 Mulai Gratis Sekarang</a>
-          <a href="#cara-kerja" class="btn btn-outline-lg">Lihat Demo →</a>
-        </div>
-
-        <div class="hero-trust">
-          <div class="trust-avatars">
-            <div class="trust-avatar" style="background:linear-gradient(135deg,#3B3FD8,#5A5EF0)">F</div>
-            <div class="trust-avatar" style="background:linear-gradient(135deg,#059669,#10B981)">R</div>
-            <div class="trust-avatar" style="background:linear-gradient(135deg,#DC2626,#EF4444)">A</div>
-            <div class="trust-avatar" style="background:linear-gradient(135deg,#D97706,#F59E0B)">D</div>
-          </div>
-          <div>
-            <div class="trust-stars">★★★★★</div>
-            <div class="trust-text">Dipercaya oleh <strong>2.500+</strong> mahasiswa · 4.9/5</div>
-          </div>
-        </div>
-
-        <div class="hero-stats">
-          <div class="stat-item">
-            <div class="stat-number"><span class="counter" data-target="2400" data-suffix="+">0</span></div>
-            <div class="stat-label">Mahasiswa Aktif</div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-number"><span class="counter" data-target="180" data-suffix="+">0</span></div>
-            <div class="stat-label">Dosen Bergabung</div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-number"><span class="counter" data-target="98" data-suffix="%">0</span></div>
-            <div class="stat-label">Kepuasan Pengguna</div>
-          </div>
-        </div>
-      </div><!-- /hero-left -->
-
-      <!-- ── RIGHT: 3D PHONE SCENE ── -->
-      <!--
-        STRUCTURE (critical):
-        .hero-visual            — 2D container, relative
-          .scene-3d             — perspective camera (750px from above)
-            .phone-group        — entire cluster (rotates for parallax)
-              .phone-3d.*       — STATIC 3D position via transform
-                .phone-inner    — ONLY floating Y animation here
-                  img           — the phone screenshot
-          .float-card.*         — 2D glass cards overlaid on scene
-      -->
-      <div class="hero-visual">
-
-        <!-- 3D SCENE -->
-        <div class="scene-3d">
-          <div class="phone-group" id="phoneGroup">
-
-            <!-- Back ambient glow -->
-            <div class="phone-glow-bg"></div>
-
-            <!-- ① MAIN PHONE — center-front, largest -->
-            <div class="phone-3d phone-main">
-              <div class="phone-inner">
-                <img src="assets/images/dashboard-mahasiswa.png"
-                     alt="Dashboard Mahasiswa ProTAS" loading="eager" />
-              </div>
-            </div>
-
-            <!-- ② LEFT PHONE — top-left, rotateY(28°) shows right face -->
-            <div class="phone-3d phone-left">
-              <div class="phone-inner">
-                <img src="assets/images/profile-dosen.png"
-                     alt="Profil Dosen ProTAS" loading="lazy" />
-              </div>
-            </div>
-
-            <!-- ③ RIGHT PHONE — top-right, rotateY(-26°) shows left face -->
-            <div class="phone-3d phone-right">
-              <div class="phone-inner">
-                <img src="assets/images/bimbingan.png"
-                     alt="Chat Bimbingan ProTAS" loading="lazy" />
-              </div>
-            </div>
-
-            <!-- ④ BOTTOM-LEFT PHONE — lower, deeper back -->
-            <div class="phone-3d phone-bl">
-              <div class="phone-inner">
-                <img src="assets/images/dashboard-dosen.png"
-                     alt="Dashboard Dosen ProTAS" loading="lazy" />
-              </div>
-            </div>
-
-            <!-- ⑤ BOTTOM-RIGHT PHONE — lowest, furthest back -->
-            <div class="phone-3d phone-br">
-              <div class="phone-inner">
-                <img src="assets/images/profile-mahasiswa.png"
-                     alt="Profil Mahasiswa ProTAS" loading="lazy" />
-              </div>
-            </div>
-
-          </div><!-- /phone-group -->
-        </div><!-- /scene-3d -->
-
-        <!-- FLOATING GLASS CARDS — 2D overlay, outside 3D scene -->
-
-        <div class="float-card fc-progress">
-          <div class="float-card-inner">
-            <div class="float-card-icon" style="background:rgba(34,197,94,.18)">📈</div>
-            <div class="float-card-text">
-              <span class="float-card-label">Progress Skripsi</span>
-              <span class="float-card-value">88% <span style="font-size:11px;color:#22C55E;font-weight:800">↑</span></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="float-card fc-jadwal">
-          <div class="float-card-inner">
-            <div class="float-card-icon" style="background:rgba(91,95,240,.2)">📅</div>
-            <div class="float-card-text">
-              <span class="float-card-label">Jadwal Bimbingan</span>
-              <span class="float-card-value">Senin, 14:00</span>
-            </div>
-            <div class="float-card-dot" style="background:#22C55E;box-shadow:0 0 6px #22C55E"></div>
-          </div>
-        </div>
-
-        <div class="float-card fc-cloud">
-          <div class="float-card-inner">
-            <div class="float-card-icon" style="background:rgba(56,189,248,.18)">☁️</div>
-            <div class="float-card-text">
-              <span class="float-card-label">Cloud Sync</span>
-              <span class="float-card-value">Tersinkronisasi</span>
-            </div>
-            <div class="float-card-dot" style="background:#38BDF8"></div>
-          </div>
-        </div>
-
-        <div class="float-card fc-realtime">
-          <div class="float-card-inner">
-            <div class="float-card-icon" style="background:rgba(249,115,22,.15)">⚡</div>
-            <div class="float-card-text">
-              <span class="float-card-label">Real-time Updates</span>
-              <span class="float-card-value">Notifikasi Instan</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="float-card fc-analytics">
-          <div class="float-card-inner">
-            <div class="float-card-icon" style="background:rgba(167,139,250,.18)">📊</div>
-            <div class="float-card-text">
-              <span class="float-card-label">Analytics Dashboard</span>
-              <span class="float-card-value">Insight Mendalam</span>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /hero-visual -->
-    </div><!-- /hero-inner -->
-  </div><!-- /container -->
-</section>
-
-<!-- ── TRUSTED LOGOS ── -->
-<div class="trusted">
-  <div class="trusted-inner">
-    <span class="trusted-label">Dipercaya oleh</span>
-    <div class="trusted-logos">
-      <span class="trusted-logo">Amikom</span>
-      <span class="trusted-logo">STMIK</span>
-      <span class="trusted-logo">Informatika</span>
-      <span class="trusted-logo">Teknik</span>
-      <span class="trusted-logo">UGM</span>
-      <span class="trusted-logo">UNDIP</span>
-    </div>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<!-- ── UVP (UNIQUE VALUE PROPOSITION) ── -->
-<section class="uvp" id="kenapa-protas">
-  <div class="container">
-    <div class="uvp-header">
-      <div class="section-label reveal">Kenapa ProTAS</div>
-      <h2 class="section-title reveal reveal-delay-1">Bukan Sekadar Pengingat,<br><span class="gradient-text">Satu Ekosistem Bimbingan Utuh</span></h2>
-      <p class="section-desc reveal reveal-delay-2">Kebanyakan mahasiswa memantau skripsi lewat kombinasi grup WhatsApp, spreadsheet manual, dan pertemuan dadakan. ProTAS menggantikan cara kerja yang tercecer itu dengan satu platform yang saling terhubung dari bimbingan pertama sampai sidang.</p>
-    </div>
-    <div class="uvp-compare">
-      <div class="uvp-col uvp-col-old reveal-left">
-        <div class="uvp-col-head">
-          <span class="uvp-col-icon">😓</span>
-          <h3>Cara Lama</h3>
-          <p>WhatsApp + Excel + Tebak Jadwal</p>
-        </div>
-        <ul class="uvp-list">
-          <li class="uvp-item is-no">Progres tiap BAB tercecer di chat grup</li>
-          <li class="uvp-item is-no">Jadwal bimbingan sering bentrok tanpa notifikasi</li>
-          <li class="uvp-item is-no">Revisi dokumen menumpuk dan mudah hilang</li>
-          <li class="uvp-item is-no">Dosen kesulitan memantau banyak mahasiswa sekaligus</li>
-          <li class="uvp-item is-no">Tidak ada data progres yang bisa diukur</li>
-        </ul>
-      </div>
-      <div class="uvp-col uvp-col-new reveal-right">
-        <span class="uvp-col-badge">Rekomendasi</span>
-        <div class="uvp-col-head">
-          <span class="uvp-col-icon">🚀</span>
-          <h3>Dengan ProTAS</h3>
-          <p>Satu platform, semua saling terhubung</p>
-        </div>
-        <ul class="uvp-list">
-          <li class="uvp-item is-yes">Progres per-BAB tercatat rapi secara real-time</li>
-          <li class="uvp-item is-yes">Jadwal bimbingan otomatis dan langsung terkonfirmasi</li>
-          <li class="uvp-item is-yes">Riwayat revisi tersimpan aman, bisa diakses kapan saja</li>
-          <li class="uvp-item is-yes">Dashboard khusus dosen untuk semua mahasiswa bimbingan</li>
-          <li class="uvp-item is-yes">Statistik dan insight progres yang terukur jelas</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── FEATURES ── -->
-<section class="features" id="fitur">
-  <div class="container">
-    <div class="features-header">
-      <div class="section-label reveal">Fitur Unggulan</div>
-      <h2 class="section-title reveal reveal-delay-1">Semua yang Kamu Butuhkan<br><span class="gradient-text">untuk Skripsi Lancar</span></h2>
-      <p class="section-desc reveal reveal-delay-2">Dari pemantauan progres hingga manajemen dokumen — ProTAS menyediakan ekosistem lengkap untuk penyelesaian tugas akhir yang efisien.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card highlight reveal">
-        <div class="feature-icon icon-blue">📊</div>
-        <h3 class="feature-title">Pantau Progres Real-time</h3>
-        <p class="feature-desc">Visualisasi progres per-BAB yang jelas. Lihat persentase penyelesaian, timeline, dan milestone skripsimu dalam satu tampilan informatif.</p>
-      </div>
-      <div class="feature-card reveal reveal-delay-1">
-        <div class="feature-icon icon-green">💬</div>
-        <h3 class="feature-title">Chat Bimbingan Langsung</h3>
-        <p class="feature-desc">Komunikasi real-time dengan dosen pembimbing. Kirim dokumen, terima feedback, dan bahas revisi tanpa harus bertemu langsung.</p>
-      </div>
-      <div class="feature-card reveal reveal-delay-2">
-        <div class="feature-icon icon-orange">📅</div>
-        <h3 class="feature-title">Manajemen Jadwal Otomatis</h3>
-        <p class="feature-desc">Atur jadwal bimbingan dengan mudah. Sistem notifikasi otomatis memastikan kamu tidak pernah melewatkan sesi bimbingan penting.</p>
-      </div>
-      <div class="feature-card reveal reveal-delay-1">
-        <div class="feature-icon icon-purple">📁</div>
-        <h3 class="feature-title">Manajemen Dokumen Terpusat</h3>
-        <p class="feature-desc">Simpan semua versi dokumen skripsi dalam satu tempat. Riwayat revisi tersimpan rapi dan dapat diakses kapan saja dari mana saja.</p>
-      </div>
-      <div class="feature-card reveal reveal-delay-2">
-        <div class="feature-icon icon-cyan">🔔</div>
-        <h3 class="feature-title">Notifikasi Cerdas</h3>
-        <p class="feature-desc">Terima pemberitahuan instan saat dosen memberikan catatan baru, jadwal dikonfirmasi, atau ada update penting dari pembimbing.</p>
-      </div>
-      <div class="feature-card reveal reveal-delay-3">
-        <div class="feature-icon icon-red">🔐</div>
-        <h3 class="feature-title">Keamanan Data Terjamin</h3>
-        <p class="feature-desc">Enkripsi end-to-end untuk semua data dan dokumen. Privasi skripsimu terlindungi dengan standar keamanan tingkat enterprise.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── HOW IT WORKS ── -->
-<section class="how-it-works" id="cara-kerja">
-  <div class="container">
-    <div class="hiw-inner">
-      <div>
-        <div class="section-label reveal">Cara Kerja</div>
-        <h2 class="section-title reveal reveal-delay-1">Mulai dalam<br><span class="gradient-text">3 Langkah Mudah</span></h2>
-        <p class="section-desc reveal reveal-delay-2" style="margin-bottom:48px">Setup ProTAS tidak memerlukan keahlian teknis. Daftarkan dirimu dan langsung mulai.</p>
-        <div class="steps">
-          <div class="step reveal">
-            <div class="step-left"><div class="step-number">1</div><div class="step-line"></div></div>
-            <div class="step-content">
-              <h3 class="step-title">Buat Akun & Pilih Peran</h3>
-              <p class="step-desc">Daftar sebagai Mahasiswa atau Dosen Pembimbing menggunakan email institusi. Verifikasi akun dalam 1 menit.</p>
-            </div>
-          </div>
-          <div class="step reveal reveal-delay-1">
-            <div class="step-left"><div class="step-number">2</div><div class="step-line"></div></div>
-            <div class="step-content">
-              <h3 class="step-title">Hubungkan dengan Pembimbing</h3>
-              <p class="step-desc">Mahasiswa mengirim permintaan bimbingan ke dosen. Setelah diterima, mulai pantau progres bersama.</p>
-            </div>
-          </div>
-          <div class="step reveal reveal-delay-2">
-            <div class="step-left"><div class="step-number">3</div><div class="step-line"></div></div>
-            <div class="step-content">
-              <h3 class="step-title">Kelola & Pantau Skripsi</h3>
-              <p class="step-desc">Update progres per-BAB, atur jadwal bimbingan, upload dokumen, dan komunikasi langsung dari satu platform.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="hiw-visual reveal-right">
-        <div class="dashboard-preview">
-          <div class="dp-topbar">
-            <div class="dp-greeting"><h4>Hai, Hanif Al Fatta</h4><p>Selamat Datang di ProTAS</p></div>
-            <div class="dp-icon">🔔</div>
-          </div>
-          <div class="dp-body">
-            <p class="dp-section-title">Daftar Mahasiswa Bimbingan</p>
-            <div class="dp-table">
-              <div class="dp-table-header"><span>Nama Mahasiswa</span><span>Tahapan</span><span>Status</span></div>
-              <div class="dp-table-row"><div><div class="dp-student-name">Rangga</div><div class="dp-student-id">23.11.5687</div></div><span class="dp-bab">BAB 1</span><span class="badge badge-green">Selesai</span></div>
-              <div class="dp-table-row"><div><div class="dp-student-name">Fiki Fauzianto</div><div class="dp-student-id">23.11.5656</div></div><span class="dp-bab">BAB 5</span><span class="badge badge-orange">Proses</span></div>
-              <div class="dp-table-row"><div><div class="dp-student-name">Firman</div><div class="dp-student-id">23.11.5671</div></div><span class="dp-bab">BAB 3</span><span class="badge badge-green">Selesai</span></div>
-              <div class="dp-table-row"><div><div class="dp-student-name">Ade</div><div class="dp-student-id">23.11.5681</div></div><span class="dp-bab">BAB 2</span><span class="badge badge-blue">Review</span></div>
-            </div>
-            <div class="notif-list">
-              <div class="notif-item"><div class="notif-icon blue">📄</div><div style="flex:1"><div class="notif-title">Dokumen Baru Masuk</div><div class="notif-body">Fiki mengirim Bab 5 untuk direview</div><div class="notif-time">2 menit lalu</div></div><div class="notif-dot"></div></div>
-              <div class="notif-item"><div class="notif-icon green">✅</div><div style="flex:1"><div class="notif-title">Bimbingan Dikonfirmasi</div><div class="notif-body">Jadwal Senin 14:00 sudah terkonfirmasi</div><div class="notif-time">1 jam lalu</div></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── USERS / ROLES ── -->
-<section class="users-section" id="pengguna">
-  <div class="container">
-    <div class="users-inner">
-      <div class="users-text">
-        <div class="section-label reveal">Untuk Siapa?</div>
-        <h2 class="section-title reveal reveal-delay-1">Platform untuk<br><span class="gradient-text">Semua Pengguna</span></h2>
-        <p class="section-desc reveal reveal-delay-2" style="margin-bottom:32px">ProTAS dirancang untuk memenuhi kebutuhan mahasiswa maupun dosen pembimbing dalam proses bimbingan skripsi.</p>
-        <div class="role-tabs reveal reveal-delay-3">
-          <button class="role-tab active" data-role="mahasiswa">🎓 Mahasiswa</button>
-          <button class="role-tab" data-role="dosen">👨‍🏫 Dosen</button>
-        </div>
-        <div class="role-content active" data-role="mahasiswa">
-          <h3>Untuk Mahasiswa</h3>
-          <p>Kelola perjalanan skripsimu dari awal hingga selesai dengan tampilan yang intuitif dan informatif.</p>
-          <div class="role-features">
-            <div class="role-feature">Pantau progres BAB secara visual</div>
-            <div class="role-feature">Upload dan versi kontrol dokumen</div>
-            <div class="role-feature">Request jadwal bimbingan online</div>
-            <div class="role-feature">Chat langsung dengan pembimbing</div>
-            <div class="role-feature">Terima feedback dan catatan revisi</div>
-          </div>
-          <a href="#mulai" class="btn btn-primary">Mulai sebagai Mahasiswa →</a>
-        </div>
-        <div class="role-content" data-role="dosen">
-          <h3>Untuk Dosen Pembimbing</h3>
-          <p>Pantau seluruh mahasiswa bimbinganmu dari satu dashboard yang terstruktur dan efisien.</p>
-          <div class="role-features">
-            <div class="role-feature">Dashboard semua mahasiswa bimbingan</div>
-            <div class="role-feature">Approve/reject permintaan bimbingan</div>
-            <div class="role-feature">Berikan catatan dan feedback dokumen</div>
-            <div class="role-feature">Kelola jadwal bimbingan dengan mudah</div>
-            <div class="role-feature">Statistik progress seluruh mahasiswa</div>
-          </div>
-          <a href="#mulai" class="btn btn-primary">Mulai sebagai Dosen →</a>
-        </div>
-      </div>
-      <div class="users-visual reveal-right">
-        <div class="user-card">
-          <div class="user-card-avatar" style="background:linear-gradient(135deg,#3B3FD8,#5A5EF0)">🎓</div>
-          <div><div class="user-card-name">Fiki Fauzianto</div><div class="user-card-role">Mahasiswa S1 Informatika · 23.11.5656</div></div>
-          <div class="user-card-stats"><div class="user-card-stat-val">88%</div><div class="user-card-stat-label">Progress BAB</div></div>
-        </div>
-        <div class="user-card">
-          <div class="user-card-avatar" style="background:linear-gradient(135deg,#059669,#10B981)">👨‍🏫</div>
-          <div><div class="user-card-name">Hanif Al Fatta, Ph.D.</div><div class="user-card-role">Dosen Pembimbing · 234578923093</div></div>
-          <div class="user-card-stats"><div class="user-card-stat-val">24</div><div class="user-card-stat-label">Mhs Bimbingan</div></div>
-        </div>
-        <div class="user-card">
-          <div class="user-card-avatar" style="background:linear-gradient(135deg,#D97706,#F59E0B)">📋</div>
-          <div><div class="user-card-name">Admin Akademik</div><div class="user-card-role">Universitas Amikom Yogyakarta</div></div>
-          <div class="user-card-stats"><div class="user-card-stat-val">1K+</div><div class="user-card-stat-label">Data Dikelola</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── PROGRESS DEMO ── -->
-<section class="progress-demo" id="progres">
-  <div class="container">
-    <div class="progress-demo-inner">
-      <div>
-        <div class="section-label reveal">Visual Progres</div>
-        <h2 class="section-title reveal reveal-delay-1">Lihat Kemajuan<br><span class="gradient-text">Skripsimu Secara Jelas</span></h2>
-        <p class="section-desc reveal reveal-delay-2" style="margin-bottom:40px">Grafik progres per-BAB yang mudah dipahami. Ketahui di mana kamu berada dan berapa jauh lagi jarak ke garis finish.</p>
-        <div class="notif-list">
-          <div class="notif-item reveal reveal-delay-1"><div class="notif-icon blue">📝</div><div style="flex:1"><div class="notif-title">Catatan Revisi BAB 5</div><div class="notif-body">Hanif Al Fatta: "Perlu perbaikan di bagian metodologi penelitian, tolong diperjelas alur pengujiannya."</div><div class="notif-time">Hari ini · 14:32</div></div><div class="notif-dot"></div></div>
-          <div class="notif-item reveal reveal-delay-2"><div class="notif-icon green">✅</div><div style="flex:1"><div class="notif-title">BAB 4 Disetujui</div><div class="notif-body">Selamat! BAB 4 Implementasi dan Pengujian telah disetujui oleh dosen pembimbing.</div><div class="notif-time">Kemarin · 09:15</div></div></div>
-          <div class="notif-item reveal reveal-delay-3"><div class="notif-icon orange">📅</div><div style="flex:1"><div class="notif-title">Jadwal Bimbingan Dikonfirmasi</div><div class="notif-body">Bimbingan BAB 5 dijadwalkan Senin, 26 Mei 2025 pukul 14:00 WIB.</div><div class="notif-time">2 hari lalu · 16:45</div></div></div>
-        </div>
-      </div>
-      <div id="progressCard" class="progress-card reveal-right">
-        <div class="progress-card-header">
-          <h3>Ringkasan Progress</h3>
-          <span class="progress-percentage" id="progressPct">0%</span>
-        </div>
-        <div class="chapter-row"><span class="chapter-label">BAB 1</span><div class="chapter-bar-bg"><div class="chapter-bar done" data-width="100"></div></div><span class="chapter-pct">100%</span></div>
-        <div class="chapter-row"><span class="chapter-label">BAB 2</span><div class="chapter-bar-bg"><div class="chapter-bar done" data-width="100"></div></div><span class="chapter-pct">100%</span></div>
-        <div class="chapter-row"><span class="chapter-label">BAB 3</span><div class="chapter-bar-bg"><div class="chapter-bar done" data-width="100"></div></div><span class="chapter-pct">100%</span></div>
-        <div class="chapter-row"><span class="chapter-label">BAB 4</span><div class="chapter-bar-bg"><div class="chapter-bar done" data-width="100"></div></div><span class="chapter-pct">100%</span></div>
-        <div class="chapter-row"><span class="chapter-label">BAB 5</span><div class="chapter-bar-bg"><div class="chapter-bar wip" data-width="40"></div></div><span class="chapter-pct">40%</span></div>
-        <div class="donut-outer">
-          <svg class="donut-svg" viewBox="0 0 120 120">
-            <circle class="donut-bg-c" cx="60" cy="60" r="54"/>
-            <circle class="donut-fill" id="donutFill" cx="60" cy="60" r="54"/>
-            <text x="60" y="57" class="donut-center-text"><tspan class="donut-pct" id="donutPct">0%</tspan></text>
-            <text x="60" y="70" class="donut-center-text"><tspan class="donut-sub">Terselesaikan</tspan></text>
-          </svg>
-        </div>
-        <div class="progress-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div>Selesai</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#F97316"></div>Proses</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,.15)"></div>Belum</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── TESTIMONIALS ── -->
-<section class="testimonials" id="testimoni">
-  <div class="container">
-    <div class="testimonials-header">
-      <div class="section-label reveal">Testimoni</div>
-      <h2 class="section-title reveal reveal-delay-1">Kata Mereka tentang<br><span class="gradient-text">ProTAS</span></h2>
-      <p class="section-desc reveal reveal-delay-2">Ribuan mahasiswa dan dosen sudah merasakan manfaat ProTAS dalam mempercepat penyelesaian tugas akhir.</p>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card reveal">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"ProTAS benar-benar mengubah cara saya mengelola bimbingan. Progres BAB mahasiswa saya sekarang terpantau dengan jelas. Tidak ada lagi meeting yang tidak produktif!"</p>
-        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#3B3FD8,#5A5EF0)">H</div><div><div class="testimonial-name">Hanif Al Fatta, Ph.D.</div><div class="testimonial-role">Dosen Pembimbing · Amikom Yogyakarta</div></div></div>
-      </div>
-      <div class="testimonial-card reveal reveal-delay-1">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"Dulu saya sering lupa jadwal bimbingan dan revisi dokumen berantakan. Sekarang dengan ProTAS, semua terorganisir. Progress BAB 1-4 saya selesai lebih cepat dari target!"</p>
-        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#059669,#10B981)">F</div><div><div class="testimonial-name">Fiki Fauzianto</div><div class="testimonial-role">Mahasiswa S1 Informatika · Amikom</div></div></div>
-      </div>
-      <div class="testimonial-card reveal reveal-delay-2">
-        <div class="testimonial-stars">★★★★★</div>
-        <p class="testimonial-text">"Fitur chat bimbingan ProTAS membuat komunikasi dengan dosen jauh lebih efisien. Tidak ada lagi revisi yang hilang. Semua terdokumentasi dengan baik!"</p>
-        <div class="testimonial-author"><div class="testimonial-avatar" style="background:linear-gradient(135deg,#059669,#10B981)">R</div><div><div class="testimonial-name">Rangga Firman A.S.</div><div class="testimonial-role">Mahasiswa S1 Informatika · Amikom</div></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── FAQ ── -->
-<section class="faq" id="faq">
-  <div class="container">
-    <div class="faq-header">
-      <div class="section-label reveal">FAQ</div>
-      <h2 class="section-title reveal reveal-delay-1">Pertanyaan Umum</h2>
-      <p class="section-desc reveal reveal-delay-2">Jawaban untuk pertanyaan yang sering ditanyakan seputar ProTAS.</p>
-    </div>
-    <div class="faq-list">
-      <div class="faq-item reveal open">
-        <div class="faq-question">Apakah ProTAS gratis untuk digunakan?<div class="faq-icon">+</div></div>
-        <div class="faq-answer"><p>Ya! ProTAS tersedia gratis untuk mahasiswa dan dosen dengan fitur-fitur dasar yang sudah mencakup pemantauan progres, chat bimbingan, dan manajemen jadwal. Tersedia juga paket Premium untuk institusi.</p></div>
-      </div>
-      <div class="faq-item reveal reveal-delay-1">
-        <div class="faq-question">Apakah data skripsi saya aman di ProTAS?<div class="faq-icon">+</div></div>
-        <div class="faq-answer"><p>Keamanan data adalah prioritas utama kami. Semua data dienkripsi menggunakan standar SSL/TLS. Dokumen skripsi hanya dapat diakses oleh mahasiswa yang bersangkutan dan dosen pembimbingnya.</p></div>
-      </div>
-      <div class="faq-item reveal reveal-delay-2">
-        <div class="faq-question">Bagaimana cara dosen bergabung ke ProTAS?<div class="faq-icon">+</div></div>
-        <div class="faq-answer"><p>Dosen dapat mendaftar langsung melalui aplikasi menggunakan email institusi. Setelah verifikasi, dosen dapat langsung menerima permintaan bimbingan dari mahasiswa.</p></div>
-      </div>
-      <div class="faq-item reveal reveal-delay-3">
-        <div class="faq-question">Apakah ProTAS tersedia di iOS dan Android?<div class="faq-icon">+</div></div>
-        <div class="faq-answer"><p>ProTAS tersedia sebagai aplikasi mobile di Google Play Store (Android) dan App Store (iOS), serta dapat diakses melalui browser web di desktop maupun laptop.</p></div>
-      </div>
-      <div class="faq-item reveal reveal-delay-4">
-        <div class="faq-question">Bisakah satu mahasiswa memiliki lebih dari satu dosen pembimbing?<div class="faq-icon">+</div></div>
-        <div class="faq-answer"><p>Tentu bisa! ProTAS mendukung skripsi dengan lebih dari satu dosen pembimbing. Semua pembimbing dapat melihat progres dan memberikan feedback melalui platform yang sama.</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── GARANSI / RISK REDUCER ── -->
-<section class="guarantee" id="garansi">
-  <div class="container">
-    <div class="guarantee-card reveal">
-      <div class="guarantee-ribbon">💯 Bergaransi</div>
-      <div class="guarantee-header">
-        <div class="section-label">Garansi</div>
-        <h2 class="section-title">Coba Tanpa Ragu,<br><span class="gradient-text">Kami yang Jamin</span></h2>
-        <p class="section-desc">Kami yakin ProTAS akan membantu skripsimu selesai lebih terstruktur — jadi kami menghilangkan semua alasan untuk ragu mencoba.</p>
-      </div>
-      <div class="guarantee-grid">
-        <div class="guarantee-item">
-          <div class="guarantee-icon">🔒</div>
-          <h3>Data 100% Aman</h3>
-          <p>Enkripsi SSL/TLS untuk seluruh dokumen dan percakapan bimbingan. Privasi skripsimu terjamin sepenuhnya.</p>
-        </div>
-        <div class="guarantee-item">
-          <div class="guarantee-icon">↩️</div>
-          <h3>Uang Kembali 30 Hari</h3>
-          <p>Tidak puas dengan paket Premium/Institusi? Ajukan pengembalian dana penuh dalam 30 hari pertama.</p>
-        </div>
-        <div class="guarantee-item">
-          <div class="guarantee-icon">🆓</div>
-          <h3>Gratis, Tanpa Kartu Kredit</h3>
-          <p>Fitur dasar selamanya gratis untuk mahasiswa dan dosen. Tidak perlu kartu kredit untuk mulai memantau progres.</p>
-        </div>
-        <div class="guarantee-item">
-          <div class="guarantee-icon">🎧</div>
-          <h3>Dukungan Responsif</h3>
-          <p>Tim kami siap membantu lewat live chat setiap hari kerja jika kamu mengalami kendala teknis apa pun.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── CTA ── -->
-<section class="cta-section" id="mulai">
-  <div class="cta-bg-glow"></div>
-  <div class="container">
-    <div class="cta-inner">
-      <div class="cta-card reveal">
-        <div class="hero-badge" style="margin:0 auto 24px;width:fit-content">
-          <div class="hero-badge-dot"></div>
-          <span>Tersedia Gratis · Tanpa Kartu Kredit</span>
-        </div>
-        <h2 class="cta-title">Siap Selesaikan Skripsimu<br><span class="gradient-text">Lebih Cepat &amp; Terstruktur?</span></h2>
-        <p class="cta-desc">Bergabung dengan lebih dari 2.400 mahasiswa yang sudah merasakan kemudahan ProTAS. Mulai gratis sekarang.</p>
-        <div class="cta-actions">
-          <a href="#" class="btn btn-primary btn-primary-lg">🚀 Daftar Gratis Sekarang</a>
-          <a href="#" class="btn btn-outline-lg">📱 Unduh Aplikasi</a>
-        </div>
-        <p class="cta-note">✓ Gratis selamanya &nbsp;·&nbsp; ✓ Setup dalam 2 menit &nbsp;·&nbsp; ✓ Tanpa iklan</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ── CONTACT FORM ── -->
-<section class="contact" id="kontak">
-  <div class="container">
-    <div class="contact-inner">
-      <div class="contact-text">
-        <div class="section-label reveal">Hubungi Kami</div>
-        <h2 class="section-title reveal reveal-delay-1">Ada Pertanyaan atau<br><span class="gradient-text">Mewakili Institusi?</span></h2>
-        <p class="section-desc reveal reveal-delay-2" style="margin-bottom:32px">Tinggalkan data kamu dan tim ProTAS akan menghubungi untuk demo, kerja sama institusi, atau bantuan teknis lainnya.</p>
-        <div class="role-features reveal reveal-delay-3">
-          <div class="role-feature">Direspon dalam waktu 1x24 jam</div>
-          <div class="role-feature">Cocok untuk mahasiswa, dosen, maupun institusi</div>
-          <div class="role-feature">Data kamu tidak dibagikan ke pihak ketiga</div>
-        </div>
-        <div class="contact-direct reveal reveal-delay-4">
-          <div class="float-card-icon" style="background:rgba(91,95,240,.18)">✉️</div>
-          <div class="float-card-text">
-            <span class="float-card-label">Atau email langsung</span>
-            <span class="float-card-value">halo@protas.id</span>
-          </div>
-        </div>
-      </div>
-
-      <form class="contact-form reveal-right" id="contactForm" novalidate>
-        <div class="form-field">
-          <label for="contactName"><span>Nama Lengkap</span></label>
-          <input type="text" id="contactName" name="name" placeholder="Nama kamu" autocomplete="name" required>
-        </div>
-        <div class="form-field">
-          <label for="contactEmail"><span>Email</span></label>
-          <input type="email" id="contactEmail" name="email" placeholder="nama@email.com" autocomplete="email" required>
-        </div>
-        <div class="form-field">
-          <label for="contactRole"><span>Kamu sebagai</span></label>
-          <select id="contactRole" name="role">
-            <option value="Mahasiswa">Mahasiswa</option>
-            <option value="Dosen">Dosen Pembimbing</option>
-            <option value="Institusi">Admin / Institusi</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label for="contactMessage"><span>Pesan (opsional)</span></label>
-          <textarea id="contactMessage" name="message" rows="3" placeholder="Ceritakan kebutuhanmu..."></textarea>
-        </div>
-        <p class="form-error" id="contactFormError" aria-live="polite"></p>
-        <button type="submit" class="btn btn-primary contact-submit">Kirim Pesan →</button>
-        <p class="contact-form-note">Dengan mengirim, kamu menyetujui data digunakan untuk keperluan follow-up ProTAS.</p>
-      </form>
-    </div>
-  </div>
-</section>
-
-<!-- ── FOOTER ── -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a href="#" class="nav-logo" style="text-decoration:none">
-          <div class="nav-logo-icon">PT</div>
-          <span class="nav-logo-text">Pro<span>TAS</span></span>
-        </a>
-        <p>Platform digital untuk pemantauan progres tugas akhir dan skripsi mahasiswa. Memudahkan komunikasi antara mahasiswa dan dosen pembimbing.</p>
-      </div>
-      <div class="footer-col"><h4>Platform</h4><ul><li><a href="#kenapa-protas">Kenapa ProTAS</a></li><li><a href="#fitur">Fitur</a></li><li><a href="#cara-kerja">Cara Kerja</a></li><li><a href="#pengguna">Untuk Pengguna</a></li><li><a href="#progres">Progres</a></li></ul></div>
-      <div class="footer-col"><h4>Pengguna</h4><ul><li><a href="#">Mahasiswa</a></li><li><a href="#">Dosen Pembimbing</a></li><li><a href="#">Admin Akademik</a></li><li><a href="#">Institusi</a></li></ul></div>
-      <div class="footer-col"><h4>Lainnya</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="#garansi">Garansi</a></li><li><a href="#">Kebijakan Privasi</a></li><li><a href="#">Syarat &amp; Ketentuan</a></li><li><a href="#kontak">Hubungi Kami</a></li></ul></div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2025 <span>ProTAS</span> · Kelompok 10 · Universitas Amikom Yogyakarta</p>
-      <div class="footer-badge">🎓 Dibuat untuk kemajuan akademik Indonesia</div>
-    </div>
-  </div>
-</footer>
-
-
-<!-- ── ADMIN LOGIN MODAL ── -->
-<div class="admin-login-backdrop" id="adminLoginBackdrop" aria-hidden="true">
-  <div class="admin-login-modal" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
-    <button class="admin-login-close" id="adminLoginClose" type="button" aria-label="Tutup login">×</button>
-    <div class="admin-login-logo">PT</div>
-    <p class="admin-login-eyebrow">Admin Panel</p>
-    <h2 id="adminLoginTitle">Masuk ke Editor ProTAS</h2>
-    <p class="admin-login-desc">Gunakan akun admin untuk mengubah konten landing page secara visual.</p>
-    <form class="admin-login-form" id="adminLoginForm">
-      <label>
-        Username
-        <input id="adminUsername" name="username" type="text" autocomplete="username" placeholder="Masukkan username" required />
-      </label>
-      <label>
-        Password
-        <input id="adminPassword" name="password" type="password" autocomplete="current-password" placeholder="Masukkan password" required />
-      </label>
-      <p class="admin-login-error" id="adminLoginError" aria-live="polite"></p>
-      <button class="btn btn-primary admin-login-submit" type="submit">Masuk ke Admin</button>
-    </form>
-  </div>
-</div>
-
-<div id="toast-container"></div>
-<div id="scroll-top" title="Kembali ke atas">↑</div>
-
-<script src="js/cms.js"></script>
-<script src="js/main.js"></script>
-</body>
-</html>
-  </template>
-  <script src="js/cms.js"></script>
-  <script src="js/admin.js"></script>
-</body>
-</html>
